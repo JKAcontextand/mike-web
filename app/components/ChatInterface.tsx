@@ -84,29 +84,37 @@ export default function ChatInterface() {
   // Show initial Mike greeting based on coaching mode
   useEffect(() => {
     if (messages.length === 0) {
-      const standardGreeting = `Hello, I'm Mike - an AI coaching assistant using Clean Language and FOTO principles.
+      const welcomeText = coachingMode === 'kaizen'
+        ? `Hello, I'm Mike - your AI coaching assistant in Kaizen mode, focused on continuous improvement.
 
-**Important Disclaimer:** I am not a licensed professional coach or therapist. I have no formal training or licensing, and I cannot replace professional coaching or therapy services. I'm a tool for self-reflection and exploration.
+I use Clean Language with a Kaizen approach—focusing on small steps for continuous improvement. I'll help you explore your thinking and guide you toward tiny, achievable actions that feel manageable. This gentle approach reduces resistance and builds momentum through small wins.
 
-This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.
+This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.`
+        : `Hello, I'm Mike - an AI coaching assistant using Clean Language and FOTO principles.
 
-What would you like to have happen?`;
+I use Clean Language and FOTO principles to help you explore your thinking through thoughtful questions and discover your own insights. This approach respects your wisdom and helps you find clarity through respectful exploration.
 
-      const kaizenGreeting = `Hello, I'm Mike - your AI coaching assistant in Kaizen mode, focused on continuous improvement.
+This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.`;
 
-**Important Disclaimer:** I am not a licensed professional coach or therapist. I have no formal training or licensing, and I cannot replace professional coaching or therapy services. I'm a tool for self-reflection and exploration.
+      const openingQuestion = coachingMode === 'kaizen'
+        ? 'What small step would you like to explore today?'
+        : 'What would you like to have happen?';
 
-This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.
-
-What small step would you like to explore today?`;
-
-      const greeting: Message = {
-        id: 'greeting',
+      const welcomeMessage: Message = {
+        id: 'welcome',
         role: 'assistant',
-        content: coachingMode === 'kaizen' ? kaizenGreeting : standardGreeting,
+        content: welcomeText,
         timestamp: new Date(),
       };
-      setMessages([greeting]);
+
+      const questionMessage: Message = {
+        id: 'opening-question',
+        role: 'assistant',
+        content: openingQuestion,
+        timestamp: new Date(),
+      };
+
+      setMessages([welcomeMessage, questionMessage]);
     }
   }, [messages.length, coachingMode]);
 
@@ -246,7 +254,29 @@ What small step would you like to explore today?`;
       <header className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white p-6 shadow-lg">
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="text-3xl font-bold">Mike</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-3xl font-bold">Mike</h1>
+              {/* Disclaimer Tooltip */}
+              <div className="group relative">
+                <svg
+                  className="w-5 h-5 text-yellow-300 cursor-help"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                  aria-label="Important disclaimer"
+                >
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+                {/* Tooltip */}
+                <div className="absolute left-0 top-8 w-80 bg-gray-900 text-white text-sm rounded-lg p-4 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <p className="font-semibold mb-2">Important Disclaimer</p>
+                  <p className="text-gray-200">
+                    I am not a licensed professional coach or therapist. I have no formal training or licensing, and I cannot replace professional coaching or therapy services. I'm a tool for self-reflection and exploration.
+                  </p>
+                  {/* Arrow */}
+                  <div className="absolute -top-2 left-4 w-4 h-4 bg-gray-900 transform rotate-45"></div>
+                </div>
+              </div>
+            </div>
             <p className="text-sm text-blue-100 mt-1">
               Clean Language Coaching Assistant
             </p>
@@ -254,26 +284,49 @@ What small step would you like to explore today?`;
           <div className="flex gap-3 items-center">
             {/* Coaching Mode Selector */}
             <div className="flex bg-blue-800 dark:bg-blue-950 rounded-lg p-1">
-              <button
-                onClick={() => handleModeChange('standard')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  coachingMode === 'standard'
-                    ? 'bg-white text-blue-600 font-medium'
-                    : 'text-blue-100 hover:text-white'
-                }`}
-              >
-                Standard
-              </button>
-              <button
-                onClick={() => handleModeChange('kaizen')}
-                className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
-                  coachingMode === 'kaizen'
-                    ? 'bg-white text-blue-600 font-medium'
-                    : 'text-blue-100 hover:text-white'
-                }`}
-              >
-                Kaizen
-              </button>
+              {/* Standard Mode Button with Tooltip */}
+              <div className="group relative">
+                <button
+                  onClick={() => handleModeChange('standard')}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    coachingMode === 'standard'
+                      ? 'bg-white text-blue-600 font-medium'
+                      : 'text-blue-100 hover:text-white'
+                  }`}
+                >
+                  Standard
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <p className="text-gray-200">
+                    Explore through respectful questions and discover your own insights using Clean Language principles.
+                  </p>
+                  {/* Arrow */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Kaizen Mode Button with Tooltip */}
+              <div className="group relative">
+                <button
+                  onClick={() => handleModeChange('kaizen')}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                    coachingMode === 'kaizen'
+                      ? 'bg-white text-blue-600 font-medium'
+                      : 'text-blue-100 hover:text-white'
+                  }`}
+                >
+                  Kaizen
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <p className="text-gray-200">
+                    Small steps approach: Gentle questions and tiny achievable actions that bypass resistance.
+                  </p>
+                  {/* Arrow */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                </div>
+              </div>
             </div>
 
             {/* Dark Mode Toggle */}
