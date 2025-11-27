@@ -10,4 +10,5 @@ export interface ChatRequest {
     role: 'user' | 'assistant';
     content: string;
   }>;
+  mode?: 'standard' | 'kaizen';
 }

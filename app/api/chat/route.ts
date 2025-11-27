@@ -1,5 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getMikeSystemPrompt } from '@/lib/prompts';
+import { getMikeSystemPrompt, CoachingMode } from '@/lib/prompts';
 import { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request
     const body = await request.json();
-    const { messages } = body;
+    const { messages, mode = 'standard' } = body;
 
     // Basic validation
     if (!messages || !Array.isArray(messages)) {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: getMikeSystemPrompt(),
+      system: getMikeSystemPrompt(mode as CoachingMode),
       messages: messages.map((msg: any) => ({
         role: msg.role,
         content: msg.content,
