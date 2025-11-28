@@ -75,8 +75,3 @@ export function formatQuestion(template: string, words: Record<string, string>):
   });
   return formatted;
 }
-
-// Get questions by category
-export function getQuestionsByCategory(category: CleanLanguageQuestion['category']): CleanLanguageQuestion[] {
-  return cleanLanguageQuestions.filter(q => q.category === category);
-}

@@ -11,83 +11,44 @@ interface CleanLanguageSelectorProps {
 }
 
 export default function CleanLanguageSelector({ onQuestionSelect, disabled = false, messages = [] }: CleanLanguageSelectorProps) {
-  const [showWordSelector, setShowWordSelector] = useState(false);
+  const [showWordInput, setShowWordInput] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<string>('');
+  const [inputWord, setInputWord] = useState<string>('');
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
-  // Extract meaningful words from assistant messages (Mike's responses)
-  const clientWords = useMemo(() => {
-    const quotedWords: string[] = [];
-    const contextWords: string[] = [];
-
-    // Extensive list of common words to filter out
-    const commonWords = new Set([
-      'the', 'and', 'but', 'for', 'with', 'that', 'this', 'from', 'what', 'when', 'where', 'how', 'why',
-      'could', 'would', 'should', 'can', 'will', 'just', 'like', 'about', 'before', 'after', 'you', 'your',
-      'are', 'have', 'has', 'had', 'been', 'was', 'were', 'being', 'not', 'but', 'all', 'some', 'any',
-      'more', 'much', 'very', 'too', 'now', 'then', 'than', 'also', 'only', 'well', 'back', 'even', 'still',
-      'way', 'make', 'get', 'see', 'know', 'take', 'come', 'think', 'look', 'want', 'give', 'use', 'find',
-      'tell', 'ask', 'work', 'seem', 'feel', 'try', 'leave', 'call', 'keep', 'let', 'put', 'mean', 'say',
-      'there', 'here', 'who', 'which', 'them', 'these', 'those', 'their', 'they', 'she', 'him', 'her', 'his',
-      'myself', 'yourself', 'itself', 'ourselves', 'themselves', 'something', 'anything', 'everything', 'nothing',
-      'else', 'kind', 'notice', 'said', 'asking', 'sure', 'specific', 'word', 'concept', 'shared', 'asking',
-      'explore', 'further', 'more'
-    ]);
-
-    messages
-      .filter(m => m.role === 'assistant')
-      .forEach(msg => {
-        // Priority 1: Extract quoted words (these are often the client's exact metaphors)
-        const quoted = msg.content.match(/"([^"]+)"/g);
-        if (quoted) {
-          quoted.forEach(q => {
-            const word = q.replace(/"/g, '').trim();
-            // Only single words or short phrases (2-3 words max)
-            if (word.length >= 3 && word.split(' ').length <= 3) {
-              quotedWords.push(word);
-            }
-          });
-        }
-
-        // Priority 2: Extract key nouns/concepts (5+ chars, capitalized or meaningful)
-        const wordTokens = msg.content.match(/\b[A-Z][a-z]+\b|\b[a-z]{5,}\b/g) || [];
-        wordTokens.forEach(w => {
-          const lower = w.toLowerCase();
-          if (!commonWords.has(lower) && lower.length >= 5) {
-            contextWords.push(lower);
-          }
-        });
-      });
-
-    // Prioritize quoted words, then add context words, remove duplicates, keep last 12
-    const uniqueWords = [...new Set([...quotedWords, ...contextWords])];
-    return uniqueWords.slice(-12);
-  }, [messages]);
 
   const handleSelect = (question: CleanLanguageQuestion) => {
     // Check if question contains X
     if (question.question.includes(' X')) {
-      if (clientWords.length === 0) {
-        // No client words yet, just send the question as-is
-        onQuestionSelect(question.question);
-      } else {
-        // Show word selector
-        setSelectedQuestion(question.question);
-        setShowWordSelector(true);
-      }
+      // Show input modal for manual word entry
+      setSelectedQuestion(question.question);
+      setInputWord('');
+      setShowWordInput(true);
     } else {
       // No X, send directly
       onQuestionSelect(question.question);
     }
   };
 
-  const handleWordSelect = (word: string) => {
-    const finalQuestion = selectedQuestion.replace(/ X/g, ` ${word}`);
-    setShowWordSelector(false);
-    setSelectedQuestion('');
-    onQuestionSelect(finalQuestion);
+  const handleWordSubmit = () => {
+    if (inputWord.trim()) {
+      const finalQuestion = selectedQuestion.replace(/ X/g, ` ${inputWord.trim()}`);
+      setShowWordInput(false);
+      setSelectedQuestion('');
+      setInputWord('');
+      onQuestionSelect(finalQuestion);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleWordSubmit();
+    } else if (e.key === 'Escape') {
+      setShowWordInput(false);
+      setInputWord('');
+    }
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -199,8 +160,8 @@ export default function CleanLanguageSelector({ onQuestionSelect, disabled = fal
         <p>Use X for client's words • © 2017-2024 Agendashift Ltd (CC BY-SA)</p>
       </div>
 
-      {/* Word Selector Modal - Draggable */}
-      {showWordSelector && (
+      {/* Word Input Modal - Draggable */}
+      {showWordInput && (
         <div
           className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center"
           onMouseMove={handleMouseMove}
@@ -224,32 +185,46 @@ export default function CleanLanguageSelector({ onQuestionSelect, disabled = fal
               onMouseDown={handleMouseDown}
             >
               <h3 className="text-sm font-semibold text-white text-center">
-                Select word for "X"
+                Type word for "X"
               </h3>
             </div>
 
-            {/* Word Grid */}
-            <div className="p-3 max-h-64 overflow-y-auto">
-              <div className="grid grid-cols-2 gap-2">
-                {clientWords.map((word, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleWordSelect(word)}
-                    className="px-2 py-1.5 bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 rounded hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors text-xs font-medium"
-                  >
-                    {word}
-                  </button>
-                ))}
-              </div>
+            {/* Input Field */}
+            <div className="p-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">
+                Question: <span className="font-medium">{selectedQuestion}</span>
+              </p>
+              <input
+                type="text"
+                value={inputWord}
+                onChange={(e) => setInputWord(e.target.value)}
+                onKeyDown={handleKeyPress}
+                placeholder="Type the word here..."
+                autoFocus
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-1">
+                Press Enter to submit, Esc to cancel
+              </p>
             </div>
 
-            {/* Cancel Button */}
-            <div className="p-2 border-t border-gray-200 dark:border-gray-700">
+            {/* Buttons */}
+            <div className="p-2 border-t border-gray-200 dark:border-gray-700 flex gap-2">
               <button
-                onClick={() => setShowWordSelector(false)}
-                className="w-full px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs"
+                onClick={() => {
+                  setShowWordInput(false);
+                  setInputWord('');
+                }}
+                className="flex-1 px-3 py-1.5 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-xs"
               >
                 Cancel
+              </button>
+              <button
+                onClick={handleWordSubmit}
+                disabled={!inputWord.trim()}
+                className="flex-1 px-3 py-1.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-xs disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Use Word
               </button>
             </div>
           </div>

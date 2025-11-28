@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { getMikeSystemPrompt, CoachingMode } from '@/lib/prompts';
+import { getMikeSystemPrompt } from '@/lib/prompts';
+import { CoachingMode } from '@/lib/types';
 import { NextRequest } from 'next/server';
 
 export const runtime = 'nodejs';
