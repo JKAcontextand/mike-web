@@ -6,7 +6,7 @@ import { useTranslations } from '@/lib/i18n';
 import LanguageSelector from './LanguageSelector';
 import ClassificationBadge from './ClassificationBadge';
 import ClassificationStatsComponent from './ClassificationStats';
-import { classifyMessage } from '@/lib/classificationUtils';
+import { classifyMessage, learnFromReclassification } from '@/lib/classificationUtils';
 
 type CoachingMode = 'standard' | 'kaizen';
 
@@ -142,9 +142,14 @@ export default function ChatInterface() {
   // Update message classification
   const updateClassification = (messageId: string, classification: MessageClassification) => {
     setMessages(prev =>
-      prev.map(msg =>
-        msg.id === messageId ? { ...msg, classification } : msg
-      )
+      prev.map(msg => {
+        if (msg.id === messageId) {
+          // Learn from the reclassification
+          learnFromReclassification(msg.content, classification);
+          return { ...msg, classification };
+        }
+        return msg;
+      })
     );
   };
 
