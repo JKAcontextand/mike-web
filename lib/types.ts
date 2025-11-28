@@ -14,11 +14,13 @@ export interface ClassificationStats {
   outcomes: number;
 }
 
+export type CoachingMode = 'standard' | 'kaizen' | 'trainer';
+
 export interface ChatRequest {
   messages: Array<{
     role: 'user' | 'assistant';
     content: string;
   }>;
-  mode?: 'standard' | 'kaizen';
+  mode?: CoachingMode;
   language?: 'en' | 'da' | 'sv' | 'no' | 'de';
 }

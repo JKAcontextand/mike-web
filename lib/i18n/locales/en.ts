@@ -19,6 +19,10 @@ export const en: Translations = {
       label: 'Kaizen',
       tooltip: 'Small steps approach: Gentle questions and tiny achievable actions that bypass resistance.',
     },
+    trainer: {
+      label: 'Trainer',
+      tooltip: 'Practice Clean Language coaching. Mike plays the client role, you practice asking CL questions.',
+    },
   },
 
   chat: {
@@ -43,6 +47,13 @@ export const en: Translations = {
       description: 'I use Clean Language with a Kaizen approach—focusing on small steps for continuous improvement. I\'ll help you explore your thinking and guide you toward tiny, achievable actions that feel manageable. This gentle approach reduces resistance and builds momentum through small wins.',
       privacyNotice: 'This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.',
       openingQuestion: 'What small step would you like to explore today?',
+    },
+    trainer: {
+      greeting: 'Welcome to Train the Trainer mode!',
+      description: 'In this mode, I\'ll play the role of a coaching client with a real challenge or goal. You\'ll practice Clean Language coaching techniques by selecting from authentic Clean Language questions.',
+      instruction: 'I\'ve been given a scenario and I\'m ready to be coached. Begin by choosing a Clean Language question to ask me.',
+      reminder: 'Remember: In Clean Language, you use my exact words and ask minimal, non-leading questions to help me explore my own thinking.',
+      ready: 'Choose your first question when you\'re ready.',
     },
   },
 

@@ -19,6 +19,10 @@ export const da: Translations = {
       label: 'Kaizen',
       tooltip: 'Små skridt tilgang: Blide spørgsmål og små opnåelige handlinger der omgår modstand.',
     },
+    trainer: {
+      label: 'Træner',
+      tooltip: 'Øv Clean Language coaching. Mike spiller klientrollen, du øver at stille CL spørgsmål.',
+    },
   },
 
   chat: {
@@ -43,6 +47,13 @@ export const da: Translations = {
       description: 'Jeg bruger Clean Language med en Kaizen tilgang—fokuseret på små skridt til kontinuerlig forbedring. Jeg vil hjælpe dig med at udforske din tænkning og guide dig mod små, opnåelige handlinger der føles håndterbare. Denne blide tilgang reducerer modstand og skaber momentum gennem små sejre.',
       privacyNotice: 'Denne samtale er fuldstændig privat - intet gemmes eller optages. Når du opdaterer denne side, vil vores samtale blive slettet.',
       openingQuestion: 'Hvilket lille skridt vil du gerne udforske i dag?',
+    },
+    trainer: {
+      greeting: 'Velkommen til Træn Træneren tilstand!',
+      description: 'I denne tilstand spiller jeg rollen som en coaching-klient med en reel udfordring eller et mål. Du øver Clean Language coaching-teknikker ved at vælge fra autentiske Clean Language spørgsmål.',
+      instruction: 'Jeg har fået et scenarie og er klar til at blive coachet. Begynd ved at vælge et Clean Language spørgsmål at stille mig.',
+      reminder: 'Husk: I Clean Language bruger du mine præcise ord og stiller minimale, ikke-ledende spørgsmål for at hjælpe mig med at udforske min egen tænkning.',
+      ready: 'Vælg dit første spørgsmål når du er klar.',
     },
   },
 

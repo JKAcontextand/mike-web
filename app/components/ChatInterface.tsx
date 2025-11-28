@@ -1,14 +1,13 @@
 'use client';
 
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { Message, MessageClassification, ClassificationStats } from '@/lib/types';
+import { Message, MessageClassification, ClassificationStats, CoachingMode } from '@/lib/types';
 import { useTranslations } from '@/lib/i18n';
 import LanguageSelector from './LanguageSelector';
 import ClassificationBadge from './ClassificationBadge';
 import ClassificationStatsComponent from './ClassificationStats';
+import CleanLanguageSelector from './CleanLanguageSelector';
 import { classifyMessage, learnFromReclassification } from '@/lib/classificationUtils';
-
-type CoachingMode = 'standard' | 'kaizen';
 
 export default function ChatInterface() {
   const { language, changeLanguage, t, config, mounted: i18nMounted } = useTranslations();
@@ -98,25 +97,124 @@ export default function ChatInterface() {
   // Show initial Mike greeting based on coaching mode
   useEffect(() => {
     if (messages.length === 0 && i18nMounted) {
-      const modeKey = coachingMode === 'kaizen' ? 'kaizen' : 'standard';
-      const welcomeText = `${t.welcome[modeKey].greeting}\n\n${t.welcome[modeKey].description}\n\n${t.welcome[modeKey].privacyNotice}`;
-      const openingQuestion = t.welcome[modeKey].openingQuestion;
+      // Trainer mode has different welcome structure
+      if (coachingMode === 'trainer') {
+        const welcomeText = `${t.welcome.trainer.greeting}\n\n${t.welcome.trainer.description}\n\n${t.welcome.trainer.instruction}\n\n${t.welcome.trainer.reminder}`;
+        const welcomeMessage: Message = {
+          id: 'welcome',
+          role: 'assistant',
+          content: welcomeText,
+          timestamp: new Date(),
+        };
 
-      const welcomeMessage: Message = {
-        id: 'welcome',
-        role: 'assistant',
-        content: welcomeText,
-        timestamp: new Date(),
-      };
+        // Automatically send the opening Clean Language question
+        const openingQuestion: Message = {
+          id: 'opening-question',
+          role: 'user',
+          content: 'And what would you like to have happen?',
+          timestamp: new Date(),
+        };
 
-      const questionMessage: Message = {
-        id: 'opening-question',
-        role: 'assistant',
-        content: openingQuestion,
-        timestamp: new Date(),
-      };
+        setMessages([welcomeMessage, openingQuestion]);
+        setIsLoading(true);
 
-      setMessages([welcomeMessage, questionMessage]);
+        // Send to API to get Mike's response as client
+        fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            messages: [welcomeMessage, openingQuestion].map((msg) => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+            mode: 'trainer',
+            language: language,
+          }),
+        })
+          .then(async (response) => {
+            if (!response.ok) {
+              throw new Error(`API error: ${response.status}`);
+            }
+
+            const reader = response.body?.getReader();
+            const decoder = new TextDecoder();
+            let assistantContent = '';
+            const assistantId = crypto.randomUUID();
+
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: assistantId,
+                role: 'assistant',
+                content: '',
+                timestamp: new Date(),
+              },
+            ]);
+
+            if (reader) {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                const chunk = decoder.decode(value);
+                const lines = chunk.split('\n');
+
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const data = line.slice(6);
+                    if (data === '[DONE]') {
+                      setIsLoading(false);
+                      break;
+                    }
+
+                    try {
+                      const parsed = JSON.parse(data);
+                      if (parsed.text) {
+                        assistantContent += parsed.text;
+                        setMessages((prev) =>
+                          prev.map((msg) =>
+                            msg.id === assistantId
+                              ? { ...msg, content: assistantContent }
+                              : msg
+                          )
+                        );
+                      }
+                    } catch (e) {
+                      // Skip parse errors
+                    }
+                  }
+                }
+              }
+            }
+
+            setIsLoading(false);
+          })
+          .catch((err) => {
+            console.error('Opening question error:', err);
+            setError(err instanceof Error ? err.message : 'Failed to send message');
+            setIsLoading(false);
+          });
+      } else {
+        const modeKey = coachingMode === 'kaizen' ? 'kaizen' : 'standard';
+        const welcomeText = `${t.welcome[modeKey].greeting}\n\n${t.welcome[modeKey].description}\n\n${t.welcome[modeKey].privacyNotice}`;
+        const openingQuestion = t.welcome[modeKey].openingQuestion;
+
+        const welcomeMessage: Message = {
+          id: 'welcome',
+          role: 'assistant',
+          content: welcomeText,
+          timestamp: new Date(),
+        };
+
+        const questionMessage: Message = {
+          id: 'opening-question',
+          role: 'assistant',
+          content: openingQuestion,
+          timestamp: new Date(),
+        };
+
+        setMessages([welcomeMessage, questionMessage]);
+      }
     }
   }, [messages.length, coachingMode, i18nMounted, t]);
 
@@ -163,7 +261,10 @@ export default function ChatInterface() {
       role: 'user',
       content: input.trim(),
       timestamp: new Date(),
-      classification: classifyMessage(input.trim(), language),
+      // Classify in standard and trainer modes
+      classification: (coachingMode === 'standard' || coachingMode === 'trainer')
+        ? classifyMessage(input.trim(), language)
+        : undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -287,12 +388,12 @@ export default function ChatInterface() {
 
   return (
     <div className="flex flex-col h-screen max-w-4xl mx-auto bg-white dark:bg-gray-900 transition-colors">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white p-6 shadow-lg">
-        <div className="flex justify-between items-start">
-          <div>
+      {/* Header - Compact */}
+      <header className="bg-gradient-to-r from-blue-600 to-blue-700 dark:from-blue-800 dark:to-blue-900 text-white p-3 shadow-lg">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">{t.header.title}</h1>
+              <h1 className="text-xl font-bold">{t.header.title}</h1>
               {/* Disclaimer Tooltip */}
               <div className="group relative">
                 <svg
@@ -314,18 +415,30 @@ export default function ChatInterface() {
                 </div>
               </div>
             </div>
-            <p className="text-sm text-blue-100 mt-1">
+            <span className="text-xs text-blue-100">
               {t.header.subtitle}
-            </p>
+            </span>
+
+            {/* Classification Stats - Inline in Header */}
+            {(coachingMode === 'standard' || coachingMode === 'trainer') && messages.some(m => m.role === 'user') && (
+              <div className="flex gap-3 text-xs">
+                <span className="bg-blue-800 dark:bg-blue-950 px-2 py-0.5 rounded">
+                  Obstacle: {stats.obstacles}
+                </span>
+                <span className="bg-blue-800 dark:bg-blue-950 px-2 py-0.5 rounded">
+                  Outcome: {stats.outcomes}
+                </span>
+              </div>
+            )}
           </div>
-          <div className="flex gap-3 items-center">
+          <div className="flex gap-2 items-center">
             {/* Coaching Mode Selector */}
             <div className="flex bg-blue-800 dark:bg-blue-950 rounded-lg p-1">
               {/* Standard Mode Button with Tooltip */}
               <div className="group relative">
                 <button
                   onClick={() => handleModeChange('standard')}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
                     coachingMode === 'standard'
                       ? 'bg-white text-blue-600 font-medium'
                       : 'text-blue-100 hover:text-white'
@@ -347,7 +460,7 @@ export default function ChatInterface() {
               <div className="group relative">
                 <button
                   onClick={() => handleModeChange('kaizen')}
-                  className={`px-3 py-1.5 text-sm rounded-md transition-colors ${
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
                     coachingMode === 'kaizen'
                       ? 'bg-white text-blue-600 font-medium'
                       : 'text-blue-100 hover:text-white'
@@ -359,6 +472,28 @@ export default function ChatInterface() {
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
                   <p className="text-gray-200">
                     {t.modes.kaizen.tooltip}
+                  </p>
+                  {/* Arrow */}
+                  <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
+                </div>
+              </div>
+
+              {/* Trainer Mode Button with Tooltip */}
+              <div className="group relative">
+                <button
+                  onClick={() => handleModeChange('trainer')}
+                  className={`px-2 py-1 text-xs rounded-md transition-colors ${
+                    coachingMode === 'trainer'
+                      ? 'bg-white text-blue-600 font-medium'
+                      : 'text-blue-100 hover:text-white'
+                  }`}
+                >
+                  {t.modes.trainer.label}
+                </button>
+                {/* Tooltip */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
+                  <p className="text-gray-200">
+                    {t.modes.trainer.tooltip}
                   </p>
                   {/* Arrow */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
@@ -409,7 +544,7 @@ export default function ChatInterface() {
                   : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
               }`}
             >
-              {msg.role === 'user' && coachingMode === 'standard' && (
+              {msg.role === 'user' && (coachingMode === 'standard' || coachingMode === 'trainer') && (
                 <div className="absolute top-2 right-2">
                   <ClassificationBadge
                     classification={msg.classification}
@@ -418,7 +553,7 @@ export default function ChatInterface() {
                   />
                 </div>
               )}
-              <p className={`whitespace-pre-wrap leading-relaxed ${msg.role === 'user' && coachingMode === 'standard' ? 'pr-20' : ''}`}>
+              <p className={`whitespace-pre-wrap leading-relaxed ${msg.role === 'user' && (coachingMode === 'standard' || coachingMode === 'trainer') ? 'pr-20' : ''}`}>
                 {msg.content}
               </p>
             </div>
@@ -447,58 +582,152 @@ export default function ChatInterface() {
         </div>
       )}
 
-      {/* Classification Stats - Only in Standard mode */}
-      {coachingMode === 'standard' && messages.some(m => m.role === 'user') && (
-        <ClassificationStatsComponent
-          stats={stats}
-          language={language}
-          showReflections={false}
-        />
-      )}
+      {/* Input - Different UI for Trainer mode */}
+      {coachingMode === 'trainer' ? (
+        <div className="border-t border-gray-200 dark:border-gray-700">
+          <CleanLanguageSelector
+            messages={messages}
+            onQuestionSelect={(question) => {
+              setInput(question);
+              // Auto-submit the selected question
+              const userMessage: Message = {
+                id: crypto.randomUUID(),
+                role: 'user',
+                content: question,
+                timestamp: new Date(),
+                classification: classifyMessage(question, language),
+              };
+              setMessages((prev) => [...prev, userMessage]);
+              setInput('');
+              setIsLoading(true);
+              setError(null);
 
-      {/* Input */}
-      <form onSubmit={sendMessage} className="border-t border-gray-200 dark:border-gray-700 p-6">
-        <div className="flex gap-3">
-          <input
-            ref={inputRef}
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
+              // Send to API
+              fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  messages: [...messages, userMessage].map((msg) => ({
+                    role: msg.role,
+                    content: msg.content,
+                  })),
+                  mode: coachingMode,
+                  language: language,
+                }),
+              })
+                .then(async (response) => {
+                  if (!response.ok) {
+                    throw new Error(`API error: ${response.status}`);
+                  }
+
+                  const reader = response.body?.getReader();
+                  const decoder = new TextDecoder();
+                  let assistantContent = '';
+                  const assistantId = crypto.randomUUID();
+
+                  setMessages((prev) => [
+                    ...prev,
+                    {
+                      id: assistantId,
+                      role: 'assistant',
+                      content: '',
+                      timestamp: new Date(),
+                    },
+                  ]);
+
+                  if (reader) {
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+
+                      const chunk = decoder.decode(value);
+                      const lines = chunk.split('\n');
+
+                      for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                          const data = line.slice(6);
+                          if (data === '[DONE]') {
+                            setIsLoading(false);
+                            break;
+                          }
+
+                          try {
+                            const parsed = JSON.parse(data);
+                            if (parsed.text) {
+                              assistantContent += parsed.text;
+                              setMessages((prev) =>
+                                prev.map((msg) =>
+                                  msg.id === assistantId
+                                    ? { ...msg, content: assistantContent }
+                                    : msg
+                                )
+                              );
+                            }
+                          } catch (e) {
+                            // Skip parse errors
+                          }
+                        }
+                      }
+                    }
+                  }
+
+                  setIsLoading(false);
+                })
+                .catch((err) => {
+                  console.error('Send message error:', err);
+                  setError(
+                    err instanceof Error ? err.message : 'Failed to send message'
+                  );
+                  setIsLoading(false);
+                });
+            }}
             disabled={isLoading}
-            placeholder={t.chat.inputPlaceholder}
-            className="flex-1 px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 transition-colors"
-            maxLength={2000}
           />
-
-          {/* Voice Input Button */}
-          <button
-            type="button"
-            onClick={startVoiceInput}
-            disabled={isLoading}
-            className={`p-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed font-medium transition-colors ${
-              isRecording
-                ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
-                : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
-            }`}
-            aria-label={isRecording ? t.chat.voiceInputStop : t.chat.voiceInputStart}
-          >
-            <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-            </svg>
-          </button>
-
-          <button
-            type="submit"
-            disabled={isLoading || !input.trim()}
-            className="px-8 py-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed font-medium transition-colors"
-          >
-            {t.chat.sendButton}
-          </button>
         </div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-          {t.chat.privacyNotice}
-        </p>
-      </form>
+      ) : (
+        <form onSubmit={sendMessage} className="border-t border-gray-200 dark:border-gray-700 p-6">
+          <div className="flex gap-3">
+            <input
+              ref={inputRef}
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              disabled={isLoading}
+              placeholder={t.chat.inputPlaceholder}
+              className="flex-1 px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 transition-colors"
+              maxLength={2000}
+            />
+
+            {/* Voice Input Button */}
+            <button
+              type="button"
+              onClick={startVoiceInput}
+              disabled={isLoading}
+              className={`p-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed font-medium transition-colors ${
+                isRecording
+                  ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+                  : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
+              }`}
+              aria-label={isRecording ? t.chat.voiceInputStop : t.chat.voiceInputStart}
+            >
+              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+              </svg>
+            </button>
+
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="px-8 py-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed font-medium transition-colors"
+            >
+              {t.chat.sendButton}
+            </button>
+          </div>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
+            {t.chat.privacyNotice}
+          </p>
+        </form>
+      )}
     </div>
   );
 }

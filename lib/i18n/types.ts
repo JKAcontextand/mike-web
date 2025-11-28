@@ -27,6 +27,10 @@ export interface Translations {
       label: string;
       tooltip: string;
     };
+    trainer: {
+      label: string;
+      tooltip: string;
+    };
   };
 
   chat: {
@@ -51,6 +55,13 @@ export interface Translations {
       description: string;
       privacyNotice: string;
       openingQuestion: string;
+    };
+    trainer: {
+      greeting: string;
+      description: string;
+      instruction: string;
+      reminder: string;
+      ready: string;
     };
   };
 

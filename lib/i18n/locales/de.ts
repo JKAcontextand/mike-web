@@ -19,6 +19,10 @@ export const de: Translations = {
       label: 'Kaizen',
       tooltip: 'Kleine-Schritte-Ansatz: Sanfte Fragen und winzige erreichbare Handlungen, die Widerstand umgehen.',
     },
+    trainer: {
+      label: 'Trainer',
+      tooltip: 'Üben Sie Clean Language-Coaching. Mike spielt die Klientenrolle, Sie üben CL-Fragen zu stellen.',
+    },
   },
 
   chat: {
@@ -43,6 +47,13 @@ export const de: Translations = {
       description: 'Ich verwende Clean Language mit einem Kaizen-Ansatz—fokussiert auf kleine Schritte zur kontinuierlichen Verbesserung. Ich helfe Ihnen, Ihr Denken zu erkunden und Sie zu winzigen, erreichbaren Handlungen zu führen, die sich bewältigbar anfühlen. Dieser sanfte Ansatz reduziert Widerstand und baut Schwung durch kleine Erfolge auf.',
       privacyNotice: 'Dieses Gespräch ist vollständig privat - nichts wird gespeichert oder aufgezeichnet. Wenn Sie diese Seite aktualisieren, wird unser Gespräch gelöscht.',
       openingQuestion: 'Welchen kleinen Schritt möchten Sie heute erkunden?',
+    },
+    trainer: {
+      greeting: 'Willkommen im Train-the-Trainer-Modus!',
+      description: 'In diesem Modus spiele ich die Rolle eines Coaching-Klienten mit einer echten Herausforderung oder einem Ziel. Sie üben Clean Language-Coaching-Techniken, indem Sie aus authentischen Clean Language-Fragen wählen.',
+      instruction: 'Ich habe ein Szenario erhalten und bin bereit, gecoacht zu werden. Beginnen Sie damit, eine Clean Language-Frage auszuwählen, die Sie mir stellen möchten.',
+      reminder: 'Denken Sie daran: Im Clean Language verwenden Sie meine exakten Worte und stellen minimale, nicht-leitende Fragen, um mir zu helfen, mein eigenes Denken zu erkunden.',
+      ready: 'Wählen Sie Ihre erste Frage, wenn Sie bereit sind.',
     },
   },
 
