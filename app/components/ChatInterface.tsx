@@ -187,6 +187,18 @@ export default function ChatInterface() {
               }
             }
 
+            // Classify Mike's response in trainer mode
+            if (assistantContent) {
+              const classification = classifyMessage(assistantContent, language);
+              setMessages((prev) =>
+                prev.map((msg) =>
+                  msg.id === assistantId
+                    ? { ...msg, classification }
+                    : msg
+                )
+              );
+            }
+
             setIsLoading(false);
           })
           .catch((err) => {
@@ -228,14 +240,19 @@ export default function ChatInterface() {
   // Compute classification stats
   const stats = useMemo<ClassificationStats>(() => {
     return messages.reduce((acc, msg) => {
-      if (msg.role === 'user' && msg.classification) {
+      // In standard mode: count user (client) messages
+      // In trainer mode: count assistant (Mike as client) messages
+      const shouldCount = (coachingMode === 'trainer' && msg.role === 'assistant') ||
+                          (coachingMode === 'standard' && msg.role === 'user');
+
+      if (shouldCount && msg.classification) {
         if (msg.classification === 'obstacle') acc.obstacles++;
         else if (msg.classification === 'reflection') acc.reflections++;
         else if (msg.classification === 'outcome') acc.outcomes++;
       }
       return acc;
     }, { obstacles: 0, reflections: 0, outcomes: 0 });
-  }, [messages]);
+  }, [messages, coachingMode]);
 
   // Update message classification
   const updateClassification = (messageId: string, classification: MessageClassification) => {
@@ -544,7 +561,11 @@ export default function ChatInterface() {
                   : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
               }`}
             >
-              {msg.role === 'user' && (coachingMode === 'standard' || coachingMode === 'trainer') && (
+              {/* Show classification badges:
+                  - In standard mode: on user (client) messages
+                  - In trainer mode: on assistant (Mike as client) messages */}
+              {((msg.role === 'user' && coachingMode === 'standard') ||
+                (msg.role === 'assistant' && coachingMode === 'trainer')) && (
                 <div className="absolute top-2 right-2">
                   <ClassificationBadge
                     classification={msg.classification}
@@ -553,7 +574,12 @@ export default function ChatInterface() {
                   />
                 </div>
               )}
-              <p className={`whitespace-pre-wrap leading-relaxed ${msg.role === 'user' && (coachingMode === 'standard' || coachingMode === 'trainer') ? 'pr-20' : ''}`}>
+              <p className={`whitespace-pre-wrap leading-relaxed ${
+                (msg.role === 'user' && coachingMode === 'standard') ||
+                (msg.role === 'assistant' && coachingMode === 'trainer')
+                  ? 'pr-20'
+                  : ''
+              }`}>
                 {msg.content}
               </p>
             </div>
@@ -595,7 +621,7 @@ export default function ChatInterface() {
                 role: 'user',
                 content: question,
                 timestamp: new Date(),
-                classification: classifyMessage(question, language),
+                // Don't classify trainer's questions - only Mike's responses matter
               };
               setMessages((prev) => [...prev, userMessage]);
               setInput('');
@@ -669,6 +695,18 @@ export default function ChatInterface() {
                         }
                       }
                     }
+                  }
+
+                  // Classify Mike's response in trainer mode
+                  if (assistantContent) {
+                    const classification = classifyMessage(assistantContent, language);
+                    setMessages((prev) =>
+                      prev.map((msg) =>
+                        msg.id === assistantId
+                          ? { ...msg, classification }
+                          : msg
+                      )
+                    );
                   }
 
                   setIsLoading(false);

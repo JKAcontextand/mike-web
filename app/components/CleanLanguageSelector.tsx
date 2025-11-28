@@ -163,13 +163,13 @@ export default function CleanLanguageSelector({ onQuestionSelect, disabled = fal
       {/* Word Input Modal - Draggable */}
       {showWordInput && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-20 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center pointer-events-none"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onMouseLeave={handleMouseUp}
         >
           <div
-            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border-2 border-blue-400 dark:border-blue-500"
+            className="bg-white dark:bg-gray-800 rounded-lg shadow-2xl border-2 border-blue-400 dark:border-blue-500 pointer-events-auto"
             style={{
               position: 'fixed',
               left: modalPosition.x || '50%',
