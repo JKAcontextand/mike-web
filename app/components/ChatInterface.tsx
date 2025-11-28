@@ -1,11 +1,17 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import { Message } from '@/lib/types';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { Message, MessageClassification, ClassificationStats } from '@/lib/types';
+import { useTranslations } from '@/lib/i18n';
+import LanguageSelector from './LanguageSelector';
+import ClassificationBadge from './ClassificationBadge';
+import ClassificationStatsComponent from './ClassificationStats';
+import { classifyMessage } from '@/lib/classificationUtils';
 
 type CoachingMode = 'standard' | 'kaizen';
 
 export default function ChatInterface() {
+  const { language, changeLanguage, t, config, mounted: i18nMounted } = useTranslations();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -16,6 +22,7 @@ export default function ChatInterface() {
   const [isRecording, setIsRecording] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Load dark mode preference on mount (client-side only)
   useEffect(() => {
@@ -51,6 +58,13 @@ export default function ChatInterface() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Auto-focus input after loading completes
+  useEffect(() => {
+    if (!isLoading && mounted) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading, mounted]);
+
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -59,7 +73,7 @@ export default function ChatInterface() {
         const recognition = new SpeechRecognition();
         recognition.continuous = false;
         recognition.interimResults = false;
-        recognition.lang = 'en-US';
+        recognition.lang = config.speechRecognitionCode;
 
         recognition.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
@@ -68,7 +82,7 @@ export default function ChatInterface() {
         };
 
         recognition.onerror = () => {
-          setError('Voice input failed. Please try again.');
+          setError(t.chat.voiceInputError);
           setIsRecording(false);
         };
 
@@ -79,26 +93,14 @@ export default function ChatInterface() {
         recognitionRef.current = recognition;
       }
     }
-  }, []);
+  }, [config, t]);
 
   // Show initial Mike greeting based on coaching mode
   useEffect(() => {
-    if (messages.length === 0) {
-      const welcomeText = coachingMode === 'kaizen'
-        ? `Hello, I'm Mike - your AI coaching assistant in Kaizen mode, focused on continuous improvement.
-
-I use Clean Language with a Kaizen approach—focusing on small steps for continuous improvement. I'll help you explore your thinking and guide you toward tiny, achievable actions that feel manageable. This gentle approach reduces resistance and builds momentum through small wins.
-
-This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.`
-        : `Hello, I'm Mike - an AI coaching assistant using Clean Language and FOTO principles.
-
-I use Clean Language and FOTO principles to help you explore your thinking through thoughtful questions and discover your own insights. This approach respects your wisdom and helps you find clarity through respectful exploration.
-
-This conversation is completely private - nothing is stored or recorded. When you refresh this page, our conversation will be cleared.`;
-
-      const openingQuestion = coachingMode === 'kaizen'
-        ? 'What small step would you like to explore today?'
-        : 'What would you like to have happen?';
+    if (messages.length === 0 && i18nMounted) {
+      const modeKey = coachingMode === 'kaizen' ? 'kaizen' : 'standard';
+      const welcomeText = `${t.welcome[modeKey].greeting}\n\n${t.welcome[modeKey].description}\n\n${t.welcome[modeKey].privacyNotice}`;
+      const openingQuestion = t.welcome[modeKey].openingQuestion;
 
       const welcomeMessage: Message = {
         id: 'welcome',
@@ -116,7 +118,35 @@ This conversation is completely private - nothing is stored or recorded. When yo
 
       setMessages([welcomeMessage, questionMessage]);
     }
-  }, [messages.length, coachingMode]);
+  }, [messages.length, coachingMode, i18nMounted, t]);
+
+  // Reset messages when language changes
+  useEffect(() => {
+    if (i18nMounted && messages.length > 0) {
+      setMessages([]);
+    }
+  }, [language, i18nMounted]);
+
+  // Compute classification stats
+  const stats = useMemo<ClassificationStats>(() => {
+    return messages.reduce((acc, msg) => {
+      if (msg.role === 'user' && msg.classification) {
+        if (msg.classification === 'obstacle') acc.obstacles++;
+        else if (msg.classification === 'reflection') acc.reflections++;
+        else if (msg.classification === 'outcome') acc.outcomes++;
+      }
+      return acc;
+    }, { obstacles: 0, reflections: 0, outcomes: 0 });
+  }, [messages]);
+
+  // Update message classification
+  const updateClassification = (messageId: string, classification: MessageClassification) => {
+    setMessages(prev =>
+      prev.map(msg =>
+        msg.id === messageId ? { ...msg, classification } : msg
+      )
+    );
+  };
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +158,7 @@ This conversation is completely private - nothing is stored or recorded. When yo
       role: 'user',
       content: input.trim(),
       timestamp: new Date(),
+      classification: classifyMessage(input.trim(), language),
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -145,6 +176,7 @@ This conversation is completely private - nothing is stored or recorded. When yo
             content: msg.content,
           })),
           mode: coachingMode,
+          language: language,
         }),
       });
 
@@ -235,7 +267,7 @@ This conversation is completely private - nothing is stored or recorded. When yo
 
   const startVoiceInput = () => {
     if (!recognitionRef.current) {
-      setError('Voice input is not supported in your browser. Please use Chrome, Edge, or Safari.');
+      setError(t.chat.voiceInputUnsupported);
       return;
     }
 
@@ -255,22 +287,22 @@ This conversation is completely private - nothing is stored or recorded. When yo
         <div className="flex justify-between items-start">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-bold">Mike</h1>
+              <h1 className="text-3xl font-bold">{t.header.title}</h1>
               {/* Disclaimer Tooltip */}
               <div className="group relative">
                 <svg
                   className="w-5 h-5 text-yellow-300 cursor-help"
                   fill="currentColor"
                   viewBox="0 0 20 20"
-                  aria-label="Important disclaimer"
+                  aria-label={t.header.disclaimer.title}
                 >
                   <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                 </svg>
                 {/* Tooltip */}
                 <div className="absolute left-0 top-8 w-80 bg-gray-900 text-white text-sm rounded-lg p-4 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
-                  <p className="font-semibold mb-2">Important Disclaimer</p>
+                  <p className="font-semibold mb-2">{t.header.disclaimer.title}</p>
                   <p className="text-gray-200">
-                    I am not a licensed professional coach or therapist. I have no formal training or licensing, and I cannot replace professional coaching or therapy services. I'm a tool for self-reflection and exploration.
+                    {t.header.disclaimer.content}
                   </p>
                   {/* Arrow */}
                   <div className="absolute -top-2 left-4 w-4 h-4 bg-gray-900 transform rotate-45"></div>
@@ -278,7 +310,7 @@ This conversation is completely private - nothing is stored or recorded. When yo
               </div>
             </div>
             <p className="text-sm text-blue-100 mt-1">
-              Clean Language Coaching Assistant
+              {t.header.subtitle}
             </p>
           </div>
           <div className="flex gap-3 items-center">
@@ -294,12 +326,12 @@ This conversation is completely private - nothing is stored or recorded. When yo
                       : 'text-blue-100 hover:text-white'
                   }`}
                 >
-                  Standard
+                  {t.modes.standard.label}
                 </button>
                 {/* Tooltip */}
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
                   <p className="text-gray-200">
-                    Explore through respectful questions and discover your own insights using Clean Language principles.
+                    {t.modes.standard.tooltip}
                   </p>
                   {/* Arrow */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
@@ -316,12 +348,12 @@ This conversation is completely private - nothing is stored or recorded. When yo
                       : 'text-blue-100 hover:text-white'
                   }`}
                 >
-                  Kaizen
+                  {t.modes.kaizen.label}
                 </button>
                 {/* Tooltip */}
                 <div className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-64 bg-gray-900 text-white text-xs rounded-lg p-3 shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 pointer-events-none">
                   <p className="text-gray-200">
-                    Small steps approach: Gentle questions and tiny achievable actions that bypass resistance.
+                    {t.modes.kaizen.tooltip}
                   </p>
                   {/* Arrow */}
                   <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-gray-900 transform rotate-45"></div>
@@ -329,11 +361,18 @@ This conversation is completely private - nothing is stored or recorded. When yo
               </div>
             </div>
 
+            {/* Language Selector */}
+            <LanguageSelector
+              currentLanguage={language}
+              onLanguageChange={changeLanguage}
+              a11yLabel={t.a11y.toggleLanguage}
+            />
+
             {/* Dark Mode Toggle */}
             <button
               onClick={toggleDarkMode}
               className="p-2 rounded-lg bg-blue-800 dark:bg-blue-950 hover:bg-blue-900 dark:hover:bg-blue-800 transition-colors"
-              aria-label="Toggle dark mode"
+              aria-label={t.a11y.toggleDarkMode}
             >
               {darkMode ? (
                 <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
@@ -359,13 +398,22 @@ This conversation is completely private - nothing is stored or recorded. When yo
             }`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-6 py-4 shadow-md ${
+              className={`max-w-[80%] rounded-2xl px-6 py-4 shadow-md relative ${
                 msg.role === 'user'
                   ? 'bg-blue-600 text-white'
                   : 'bg-gray-100 text-gray-900 dark:bg-gray-800 dark:text-gray-100'
               }`}
             >
-              <p className="whitespace-pre-wrap leading-relaxed">
+              {msg.role === 'user' && coachingMode === 'standard' && (
+                <div className="absolute top-2 right-2">
+                  <ClassificationBadge
+                    classification={msg.classification}
+                    onClassificationChange={(newClass) => updateClassification(msg.id, newClass)}
+                    language={language}
+                  />
+                </div>
+              )}
+              <p className={`whitespace-pre-wrap leading-relaxed ${msg.role === 'user' && coachingMode === 'standard' ? 'pr-20' : ''}`}>
                 {msg.content}
               </p>
             </div>
@@ -394,15 +442,25 @@ This conversation is completely private - nothing is stored or recorded. When yo
         </div>
       )}
 
+      {/* Classification Stats - Only in Standard mode */}
+      {coachingMode === 'standard' && messages.some(m => m.role === 'user') && (
+        <ClassificationStatsComponent
+          stats={stats}
+          language={language}
+          showReflections={false}
+        />
+      )}
+
       {/* Input */}
       <form onSubmit={sendMessage} className="border-t border-gray-200 dark:border-gray-700 p-6">
         <div className="flex gap-3">
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             disabled={isLoading}
-            placeholder="Type your message..."
+            placeholder={t.chat.inputPlaceholder}
             className="flex-1 px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 transition-colors"
             maxLength={2000}
           />
@@ -417,7 +475,7 @@ This conversation is completely private - nothing is stored or recorded. When yo
                 ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
                 : 'bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200'
             }`}
-            aria-label={isRecording ? 'Stop recording' : 'Start voice input'}
+            aria-label={isRecording ? t.chat.voiceInputStop : t.chat.voiceInputStart}
           >
             <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
@@ -429,11 +487,11 @@ This conversation is completely private - nothing is stored or recorded. When yo
             disabled={isLoading || !input.trim()}
             className="px-8 py-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed font-medium transition-colors"
           >
-            Send
+            {t.chat.sendButton}
           </button>
         </div>
         <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center">
-          Your conversation is private and will be cleared when you refresh the page.
+          {t.chat.privacyNotice}
         </p>
       </form>
     </div>

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
   try {
     // Parse request
     const body = await request.json();
-    const { messages, mode = 'standard' } = body;
+    const { messages, mode = 'standard', language = 'en' } = body;
 
     // Basic validation
     if (!messages || !Array.isArray(messages)) {
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: getMikeSystemPrompt(mode as CoachingMode),
+      system: getMikeSystemPrompt(mode as CoachingMode, language as any),
       messages: messages.map((msg: any) => ({
         role: msg.role,
         content: msg.content,
