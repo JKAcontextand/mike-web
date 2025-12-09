@@ -61,4 +61,21 @@ export const en: Translations = {
     toggleDarkMode: 'Toggle dark mode',
     toggleLanguage: 'Change language',
   },
+
+  errors: {
+    rateLimit: {
+      title: 'Taking a Short Break',
+      message: 'Mike is very popular right now! The system has reached its capacity limit for the moment.',
+      suggestion: 'Please wait a few minutes and try again. The administrator has been notified.',
+    },
+    overloaded: {
+      title: 'High Demand',
+      message: 'The AI service is experiencing high demand right now.',
+      suggestion: 'Please wait a moment and try again.',
+    },
+    generic: {
+      title: 'Something Went Wrong',
+      message: 'An unexpected error occurred. Please try again.',
+    },
+  },
 };

@@ -61,4 +61,21 @@ export const de: Translations = {
     toggleDarkMode: 'Dunkelmodus umschalten',
     toggleLanguage: 'Sprache wechseln',
   },
+
+  errors: {
+    rateLimit: {
+      title: 'Kurze Pause',
+      message: 'Mike ist gerade sehr beliebt! Das System hat momentan seine Kapazitätsgrenze erreicht.',
+      suggestion: 'Bitte warten Sie einige Minuten und versuchen Sie es erneut. Der Administrator wurde benachrichtigt.',
+    },
+    overloaded: {
+      title: 'Hohe Nachfrage',
+      message: 'Der KI-Dienst erlebt gerade eine hohe Nachfrage.',
+      suggestion: 'Bitte warten Sie einen Moment und versuchen Sie es erneut.',
+    },
+    generic: {
+      title: 'Etwas ist Schiefgelaufen',
+      message: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
+    },
+  },
 };

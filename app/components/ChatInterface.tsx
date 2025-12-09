@@ -14,7 +14,7 @@ export default function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{ message: string; type?: string } | null>(null);
   const [darkMode, setDarkMode] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [coachingMode, setCoachingMode] = useState<CoachingMode>('standard');
@@ -81,7 +81,7 @@ export default function ChatInterface() {
         };
 
         recognition.onerror = () => {
-          setError(t.chat.voiceInputError);
+          setError({ message: t.chat.voiceInputError });
           setIsRecording(false);
         };
 
@@ -133,7 +133,9 @@ export default function ChatInterface() {
         })
           .then(async (response) => {
             if (!response.ok) {
-              throw new Error(`API error: ${response.status}`);
+              const errorData = await response.json().catch(() => ({}));
+              const errorType = errorData.errorType || 'unknown';
+              throw { message: errorData.error || `API error: ${response.status}`, type: errorType };
             }
 
             const reader = response.body?.getReader();
@@ -201,9 +203,12 @@ export default function ChatInterface() {
 
             setIsLoading(false);
           })
-          .catch((err) => {
+          .catch((err: any) => {
             console.error('Opening question error:', err);
-            setError(err instanceof Error ? err.message : 'Failed to send message');
+            setError({
+              message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+              type: err?.type,
+            });
             setIsLoading(false);
           });
       } else {
@@ -304,7 +309,9 @@ export default function ChatInterface() {
       });
 
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        const errorData = await response.json().catch(() => ({}));
+        const errorType = errorData.errorType || 'unknown';
+        throw { message: errorData.error || `API error: ${response.status}`, type: errorType };
       }
 
       const reader = response.body?.getReader();
@@ -360,11 +367,12 @@ export default function ChatInterface() {
       }
 
       setIsLoading(false);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Send message error:', err);
-      setError(
-        err instanceof Error ? err.message : 'Failed to send message'
-      );
+      setError({
+        message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+        type: err?.type,
+      });
       setIsLoading(false);
     }
   };
@@ -390,7 +398,7 @@ export default function ChatInterface() {
 
   const startVoiceInput = () => {
     if (!recognitionRef.current) {
-      setError(t.chat.voiceInputUnsupported);
+      setError({ message: t.chat.voiceInputUnsupported });
       return;
     }
 
@@ -603,8 +611,29 @@ export default function ChatInterface() {
 
       {/* Error */}
       {error && (
-        <div className="mx-6 mb-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 p-4 rounded">
-          <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
+        <div className={`mx-6 mb-4 border-l-4 p-4 rounded ${
+          error.type === 'rate_limit' || error.type === 'overloaded'
+            ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500'
+            : 'bg-red-50 dark:bg-red-900/20 border-red-500'
+        }`}>
+          {error.type === 'rate_limit' ? (
+            <div>
+              <p className="font-semibold text-amber-800 dark:text-amber-300">{t.errors.rateLimit.title}</p>
+              <p className="text-amber-700 dark:text-amber-400 text-sm mt-1">{t.errors.rateLimit.message}</p>
+              <p className="text-amber-600 dark:text-amber-500 text-xs mt-2">{t.errors.rateLimit.suggestion}</p>
+            </div>
+          ) : error.type === 'overloaded' ? (
+            <div>
+              <p className="font-semibold text-amber-800 dark:text-amber-300">{t.errors.overloaded.title}</p>
+              <p className="text-amber-700 dark:text-amber-400 text-sm mt-1">{t.errors.overloaded.message}</p>
+              <p className="text-amber-600 dark:text-amber-500 text-xs mt-2">{t.errors.overloaded.suggestion}</p>
+            </div>
+          ) : (
+            <div>
+              <p className="font-semibold text-red-800 dark:text-red-300">{t.errors.generic.title}</p>
+              <p className="text-red-700 dark:text-red-400 text-sm mt-1">{t.errors.generic.message}</p>
+            </div>
+          )}
         </div>
       )}
 
@@ -643,7 +672,9 @@ export default function ChatInterface() {
               })
                 .then(async (response) => {
                   if (!response.ok) {
-                    throw new Error(`API error: ${response.status}`);
+                    const errorData = await response.json().catch(() => ({}));
+                    const errorType = errorData.errorType || 'unknown';
+                    throw { message: errorData.error || `API error: ${response.status}`, type: errorType };
                   }
 
                   const reader = response.body?.getReader();
@@ -711,11 +742,12 @@ export default function ChatInterface() {
 
                   setIsLoading(false);
                 })
-                .catch((err) => {
+                .catch((err: any) => {
                   console.error('Send message error:', err);
-                  setError(
-                    err instanceof Error ? err.message : 'Failed to send message'
-                  );
+                  setError({
+                    message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+                    type: err?.type,
+                  });
                   setIsLoading(false);
                 });
             }}

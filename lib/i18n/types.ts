@@ -69,4 +69,21 @@ export interface Translations {
     toggleDarkMode: string;
     toggleLanguage: string;
   };
+
+  errors: {
+    rateLimit: {
+      title: string;
+      message: string;
+      suggestion: string;
+    };
+    overloaded: {
+      title: string;
+      message: string;
+      suggestion: string;
+    };
+    generic: {
+      title: string;
+      message: string;
+    };
+  };
 }

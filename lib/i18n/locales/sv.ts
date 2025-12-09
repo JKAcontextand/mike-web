@@ -61,4 +61,21 @@ export const sv: Translations = {
     toggleDarkMode: 'Växla mörkt läge',
     toggleLanguage: 'Byt språk',
   },
+
+  errors: {
+    rateLimit: {
+      title: 'Tar en Kort Paus',
+      message: 'Mike är väldigt populär just nu! Systemet har nått sin kapacitetsgräns för tillfället.',
+      suggestion: 'Vänta några minuter och försök igen. Administratören har meddelats.',
+    },
+    overloaded: {
+      title: 'Hög Efterfrågan',
+      message: 'AI-tjänsten upplever hög efterfrågan just nu.',
+      suggestion: 'Vänta en stund och försök igen.',
+    },
+    generic: {
+      title: 'Något Gick Fel',
+      message: 'Ett oväntat fel uppstod. Försök igen.',
+    },
+  },
 };

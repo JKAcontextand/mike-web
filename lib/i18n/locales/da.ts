@@ -61,4 +61,21 @@ export const da: Translations = {
     toggleDarkMode: 'Skift mørk tilstand',
     toggleLanguage: 'Skift sprog',
   },
+
+  errors: {
+    rateLimit: {
+      title: 'Holder en Kort Pause',
+      message: 'Mike er meget populær lige nu! Systemet har nået sin kapacitetsgrænse i øjeblikket.',
+      suggestion: 'Vent venligst et par minutter og prøv igen. Administratoren er blevet underrettet.',
+    },
+    overloaded: {
+      title: 'Stor Efterspørgsel',
+      message: 'AI-tjenesten oplever stor efterspørgsel lige nu.',
+      suggestion: 'Vent venligst et øjeblik og prøv igen.',
+    },
+    generic: {
+      title: 'Noget Gik Galt',
+      message: 'Der opstod en uventet fejl. Prøv venligst igen.',
+    },
+  },
 };
