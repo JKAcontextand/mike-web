@@ -86,4 +86,19 @@ export interface Translations {
       message: string;
     };
   };
+
+  crisis: {
+    title: string;
+    message: string;
+    resourcesIntro: string;
+    hotline: {
+      name: string;
+      number: string;
+      available: string;
+    };
+    additionalResources: string;
+    emergencyNote: string;
+    acknowledgment: string;
+    closeButton: string;
+  };
 }

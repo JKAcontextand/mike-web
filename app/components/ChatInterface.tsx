@@ -8,6 +8,8 @@ import ClassificationBadge from './ClassificationBadge';
 import ClassificationStatsComponent from './ClassificationStats';
 import CleanLanguageSelector from './CleanLanguageSelector';
 import { classifyMessage, learnFromReclassification } from '@/lib/classificationUtils';
+import { detectCrisis, shouldShowCrisisModal, CrisisType } from '@/lib/crisisDetection';
+import CrisisModal from './CrisisModal';
 
 export default function ChatInterface() {
   const { language, changeLanguage, t, config, mounted: i18nMounted } = useTranslations();
@@ -19,6 +21,8 @@ export default function ChatInterface() {
   const [mounted, setMounted] = useState(false);
   const [coachingMode, setCoachingMode] = useState<CoachingMode>('standard');
   const [isRecording, setIsRecording] = useState(false);
+  const [showCrisisModal, setShowCrisisModal] = useState(false);
+  const [sessionEnded, setSessionEnded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -276,7 +280,14 @@ export default function ChatInterface() {
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || sessionEnded) return;
+
+    // Check for crisis signals before sending
+    const crisisType = detectCrisis(input.trim());
+    if (shouldShowCrisisModal(crisisType)) {
+      setShowCrisisModal(true);
+      return;
+    }
 
     const userMessage: Message = {
       id: crypto.randomUUID(),
@@ -409,6 +420,26 @@ export default function ChatInterface() {
       setIsRecording(true);
       recognitionRef.current.start();
     }
+  };
+
+  const handleCrisisAcknowledge = () => {
+    setShowCrisisModal(false);
+    setSessionEnded(true);
+    setInput('');
+    // Add a system message indicating the session has ended
+    const crisisMessage: Message = {
+      id: 'crisis-end',
+      role: 'assistant',
+      content: t.crisis.message + '\n\n' + t.crisis.resourcesIntro + '\n' + t.crisis.hotline.name + ': ' + t.crisis.hotline.number + ' (' + t.crisis.hotline.available + ')',
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, crisisMessage]);
+  };
+
+  const handleCrisisClose = () => {
+    setShowCrisisModal(false);
+    // Don't end session, just close modal - user can continue but message wasn't sent
+    setInput('');
   };
 
   return (
@@ -751,10 +782,10 @@ export default function ChatInterface() {
                   setIsLoading(false);
                 });
             }}
-            disabled={isLoading}
+            disabled={isLoading || sessionEnded}
           />
         </div>
-      ) : (
+      ) : !sessionEnded ? (
         <form onSubmit={sendMessage} className="border-t border-gray-200 dark:border-gray-700 p-6">
           <div className="flex gap-3">
             <input
@@ -762,8 +793,8 @@ export default function ChatInterface() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              disabled={isLoading}
-              placeholder={t.chat.inputPlaceholder}
+              disabled={isLoading || sessionEnded}
+              placeholder={sessionEnded ? '' : t.chat.inputPlaceholder}
               className="flex-1 px-6 py-4 border border-gray-300 dark:border-gray-600 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 transition-colors"
               maxLength={2000}
             />
@@ -772,7 +803,7 @@ export default function ChatInterface() {
             <button
               type="button"
               onClick={startVoiceInput}
-              disabled={isLoading}
+              disabled={isLoading || sessionEnded}
               className={`p-4 rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed font-medium transition-colors ${
                 isRecording
                   ? 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
@@ -787,7 +818,7 @@ export default function ChatInterface() {
 
             <button
               type="submit"
-              disabled={isLoading || !input.trim()}
+              disabled={isLoading || !input.trim() || sessionEnded}
               className="px-8 py-4 bg-blue-600 text-white rounded-full hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-300 dark:disabled:bg-gray-700 disabled:cursor-not-allowed font-medium transition-colors"
             >
               {t.chat.sendButton}
@@ -797,7 +828,24 @@ export default function ChatInterface() {
             {t.chat.privacyNotice}
           </p>
         </form>
+      ) : null}
+
+      {/* Session ended message */}
+      {sessionEnded && (
+        <div className="border-t border-gray-200 dark:border-gray-700 p-6 bg-gray-50 dark:bg-gray-800">
+          <p className="text-center text-gray-600 dark:text-gray-400">
+            {t.crisis.message}
+          </p>
+        </div>
       )}
+
+      {/* Crisis Modal */}
+      <CrisisModal
+        isOpen={showCrisisModal}
+        onClose={handleCrisisClose}
+        onAcknowledge={handleCrisisAcknowledge}
+        t={t}
+      />
     </div>
   );
 }

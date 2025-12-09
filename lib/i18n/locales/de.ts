@@ -78,4 +78,19 @@ export const de: Translations = {
       message: 'Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.',
     },
   },
+
+  crisis: {
+    title: 'Wir Sorgen Uns Um Sie',
+    message: 'Es klingt so, als ob Sie gerade eine sehr schwierige Zeit durchmachen. Mike kann Ihnen nicht die Unterstützung bieten, die Sie jetzt brauchen.',
+    resourcesIntro: 'Bitte wenden Sie sich an ausgebildete Fachleute, die helfen können:',
+    hotline: {
+      name: 'Telefonseelsorge',
+      number: '0800 111 0 111',
+      available: 'Kostenlos, 24 Stunden am Tag, 7 Tage die Woche',
+    },
+    additionalResources: 'Sie können auch die Notaufnahme oder Ihren Hausarzt kontaktieren.',
+    emergencyNote: 'Wenn Sie in unmittelbarer Gefahr sind, rufen Sie 112 an.',
+    acknowledgment: 'Ich verstehe und habe diese Ressourcen notiert',
+    closeButton: 'Schließen',
+  },
 };

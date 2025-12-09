@@ -78,4 +78,19 @@ export const sv: Translations = {
       message: 'Ett oväntat fel uppstod. Försök igen.',
     },
   },
+
+  crisis: {
+    title: 'Vi Bryr Oss Om Dig',
+    message: 'Det låter som att du kanske går igenom en mycket svår tid. Mike kan inte ge dig det stöd du behöver just nu.',
+    resourcesIntro: 'Kontakta utbildade yrkespersoner som kan hjälpa:',
+    hotline: {
+      name: 'Mind Självmordslinjen',
+      number: '90101',
+      available: 'Dygnet runt, alla dagar',
+    },
+    additionalResources: 'Du kan också kontakta akutmottagningen eller din vårdcentral.',
+    emergencyNote: 'Om du är i omedelbar fara, ring 112.',
+    acknowledgment: 'Jag förstår och har noterat dessa resurser',
+    closeButton: 'Stäng',
+  },
 };

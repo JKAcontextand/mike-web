@@ -78,4 +78,19 @@ export const no: Translations = {
       message: 'En uventet feil oppstod. Vennligst prøv igjen.',
     },
   },
+
+  crisis: {
+    title: 'Vi Bryr Oss Om Deg',
+    message: 'Det høres ut som at du kanskje går gjennom en veldig vanskelig tid. Mike kan ikke gi deg den støtten du trenger akkurat nå.',
+    resourcesIntro: 'Kontakt utdannede fagfolk som kan hjelpe:',
+    hotline: {
+      name: 'Kirkens SOS',
+      number: '22 40 00 40',
+      available: 'Døgnåpent, alle dager',
+    },
+    additionalResources: 'Du kan også kontakte legevakten eller din fastlege.',
+    emergencyNote: 'Hvis du er i umiddelbar fare, ring 113.',
+    acknowledgment: 'Jeg forstår og har notert disse ressursene',
+    closeButton: 'Lukk',
+  },
 };

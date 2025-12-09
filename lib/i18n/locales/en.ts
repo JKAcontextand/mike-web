@@ -78,4 +78,19 @@ export const en: Translations = {
       message: 'An unexpected error occurred. Please try again.',
     },
   },
+
+  crisis: {
+    title: 'We Care About You',
+    message: 'It sounds like you may be going through a very difficult time. Mike is not equipped to provide the support you need right now.',
+    resourcesIntro: 'Please reach out to trained professionals who can help:',
+    hotline: {
+      name: 'Samaritans (UK & Ireland)',
+      number: '116 123',
+      available: 'Free, 24 hours a day, 7 days a week',
+    },
+    additionalResources: 'You can also contact your local emergency services or go to your nearest emergency room.',
+    emergencyNote: 'If you are in immediate danger, please call emergency services (911 in US, 999 in UK, 112 in EU).',
+    acknowledgment: 'I understand and have noted these resources',
+    closeButton: 'Close',
+  },
 };

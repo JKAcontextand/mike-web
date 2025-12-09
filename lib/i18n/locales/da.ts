@@ -78,4 +78,19 @@ export const da: Translations = {
       message: 'Der opstod en uventet fejl. Prøv venligst igen.',
     },
   },
+
+  crisis: {
+    title: 'Vi Bekymrer Os Om Dig',
+    message: 'Det lyder som om du måske går igennem en meget svær tid. Mike er ikke i stand til at give dig den støtte, du har brug for lige nu.',
+    resourcesIntro: 'Kontakt venligst uddannede fagfolk, der kan hjælpe:',
+    hotline: {
+      name: 'Livslinien',
+      number: '70 201 201',
+      available: 'Døgnåbent, alle dage',
+    },
+    additionalResources: 'Du kan også kontakte skadestuen eller din læge.',
+    emergencyNote: 'Hvis du er i umiddelbar fare, ring 112.',
+    acknowledgment: 'Jeg forstår og har noteret disse ressourcer',
+    closeButton: 'Luk',
+  },
 };
