@@ -1,4 +1,4 @@
-import { kv } from '@vercel/kv';
+import { Redis } from '@upstash/redis';
 
 // Configuration - adjust these limits as needed
 export const USAGE_LIMITS = {
@@ -7,7 +7,24 @@ export const USAGE_LIMITS = {
   ENABLED: true,            // Set to false to disable limits
 };
 
-// Keys for KV storage
+// Initialize Redis client (lazy initialization)
+let redis: Redis | null = null;
+
+function getRedis(): Redis | null {
+  if (redis) return redis;
+
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+
+  if (!url || !token) {
+    return null;
+  }
+
+  redis = new Redis({ url, token });
+  return redis;
+}
+
+// Keys for Redis storage
 const DAILY_KEY = 'mike:usage:daily';
 const MONTHLY_KEY = 'mike:usage:monthly';
 const DAILY_DATE_KEY = 'mike:usage:daily:date';
@@ -47,16 +64,28 @@ export async function checkUsageLimit(): Promise<UsageStatus> {
     };
   }
 
+  const client = getRedis();
+  if (!client) {
+    console.warn('Usage limits check skipped (Redis not configured)');
+    return {
+      allowed: true,
+      dailyUsed: 0,
+      dailyLimit: USAGE_LIMITS.DAILY_REQUESTS,
+      monthlyUsed: 0,
+      monthlyLimit: USAGE_LIMITS.MONTHLY_REQUESTS,
+    };
+  }
+
   try {
     const today = getTodayString();
     const month = getMonthString();
 
     // Get current counts and dates
     const [dailyCount, monthlyCount, storedDailyDate, storedMonthlyDate] = await Promise.all([
-      kv.get<number>(DAILY_KEY),
-      kv.get<number>(MONTHLY_KEY),
-      kv.get<string>(DAILY_DATE_KEY),
-      kv.get<string>(MONTHLY_DATE_KEY),
+      client.get<number>(DAILY_KEY),
+      client.get<number>(MONTHLY_KEY),
+      client.get<string>(DAILY_DATE_KEY),
+      client.get<string>(MONTHLY_DATE_KEY),
     ]);
 
     // Reset daily counter if it's a new day
@@ -120,30 +149,33 @@ export async function checkUsageLimit(): Promise<UsageStatus> {
 export async function incrementUsage(): Promise<void> {
   if (!USAGE_LIMITS.ENABLED) return;
 
+  const client = getRedis();
+  if (!client) return;
+
   try {
     const today = getTodayString();
     const month = getMonthString();
 
     // Get current dates
     const [storedDailyDate, storedMonthlyDate] = await Promise.all([
-      kv.get<string>(DAILY_DATE_KEY),
-      kv.get<string>(MONTHLY_DATE_KEY),
+      client.get<string>(DAILY_DATE_KEY),
+      client.get<string>(MONTHLY_DATE_KEY),
     ]);
 
     // Reset and increment daily
     if (storedDailyDate !== today) {
-      await kv.set(DAILY_KEY, 1);
-      await kv.set(DAILY_DATE_KEY, today);
+      await client.set(DAILY_KEY, 1);
+      await client.set(DAILY_DATE_KEY, today);
     } else {
-      await kv.incr(DAILY_KEY);
+      await client.incr(DAILY_KEY);
     }
 
     // Reset and increment monthly
     if (storedMonthlyDate !== month) {
-      await kv.set(MONTHLY_KEY, 1);
-      await kv.set(MONTHLY_DATE_KEY, month);
+      await client.set(MONTHLY_KEY, 1);
+      await client.set(MONTHLY_DATE_KEY, month);
     } else {
-      await kv.incr(MONTHLY_KEY);
+      await client.incr(MONTHLY_KEY);
     }
   } catch (error) {
     console.warn('Failed to increment usage counters:', error);
