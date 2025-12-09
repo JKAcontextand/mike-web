@@ -64,9 +64,14 @@ export const en: Translations = {
 
   errors: {
     rateLimit: {
-      title: 'Taking a Short Break',
-      message: 'Mike is very popular right now! The system has reached its capacity limit for the moment.',
-      suggestion: 'Please wait a few minutes and try again. The administrator has been notified.',
+      title: 'Just a Moment',
+      message: 'Too many requests right now.',
+      suggestion: 'Please wait a moment and try again.',
+    },
+    quotaExceeded: {
+      title: 'Tokens Used Up',
+      message: 'Mike is not available right now. The monthly usage limit has been reached.',
+      suggestion: 'Please contact the administrator. The limit resets at the beginning of each month.',
     },
     overloaded: {
       title: 'High Demand',

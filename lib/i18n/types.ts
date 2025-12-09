@@ -76,6 +76,11 @@ export interface Translations {
       message: string;
       suggestion: string;
     };
+    quotaExceeded: {
+      title: string;
+      message: string;
+      suggestion: string;
+    };
     overloaded: {
       title: string;
       message: string;

@@ -64,9 +64,14 @@ export const da: Translations = {
 
   errors: {
     rateLimit: {
-      title: 'Holder en Kort Pause',
-      message: 'Mike er meget populær lige nu! Systemet har nået sin kapacitetsgrænse i øjeblikket.',
-      suggestion: 'Vent venligst et par minutter og prøv igen. Administratoren er blevet underrettet.',
+      title: 'Et Øjeblik',
+      message: 'For mange forespørgsler lige nu.',
+      suggestion: 'Vent venligst et øjeblik og prøv igen.',
+    },
+    quotaExceeded: {
+      title: 'Tokens Opbrugt',
+      message: 'Mike er ikke tilgængelig lige nu. Den månedlige forbrugsgrænse er nået.',
+      suggestion: 'Kontakt venligst administratoren. Grænsen nulstilles ved begyndelsen af hver måned.',
     },
     overloaded: {
       title: 'Stor Efterspørgsel',

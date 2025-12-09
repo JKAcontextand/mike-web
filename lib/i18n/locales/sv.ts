@@ -64,9 +64,14 @@ export const sv: Translations = {
 
   errors: {
     rateLimit: {
-      title: 'Tar en Kort Paus',
-      message: 'Mike är väldigt populär just nu! Systemet har nått sin kapacitetsgräns för tillfället.',
-      suggestion: 'Vänta några minuter och försök igen. Administratören har meddelats.',
+      title: 'Ett Ögonblick',
+      message: 'För många förfrågningar just nu.',
+      suggestion: 'Vänta en stund och försök igen.',
+    },
+    quotaExceeded: {
+      title: 'Tokens Förbrukade',
+      message: 'Mike är inte tillgänglig just nu. Den månatliga användningsgränsen har nåtts.',
+      suggestion: 'Kontakta administratören. Gränsen återställs i början av varje månad.',
     },
     overloaded: {
       title: 'Hög Efterfrågan',

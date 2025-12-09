@@ -645,6 +645,8 @@ export default function ChatInterface() {
         <div className={`mx-6 mb-4 border-l-4 p-4 rounded ${
           error.type === 'rate_limit' || error.type === 'overloaded'
             ? 'bg-amber-50 dark:bg-amber-900/20 border-amber-500'
+            : error.type === 'quota_exceeded'
+            ? 'bg-rose-50 dark:bg-rose-900/20 border-rose-500'
             : 'bg-red-50 dark:bg-red-900/20 border-red-500'
         }`}>
           {error.type === 'rate_limit' ? (
@@ -652,6 +654,12 @@ export default function ChatInterface() {
               <p className="font-semibold text-amber-800 dark:text-amber-300">{t.errors.rateLimit.title}</p>
               <p className="text-amber-700 dark:text-amber-400 text-sm mt-1">{t.errors.rateLimit.message}</p>
               <p className="text-amber-600 dark:text-amber-500 text-xs mt-2">{t.errors.rateLimit.suggestion}</p>
+            </div>
+          ) : error.type === 'quota_exceeded' ? (
+            <div>
+              <p className="font-semibold text-rose-800 dark:text-rose-300">{t.errors.quotaExceeded.title}</p>
+              <p className="text-rose-700 dark:text-rose-400 text-sm mt-1">{t.errors.quotaExceeded.message}</p>
+              <p className="text-rose-600 dark:text-rose-500 text-xs mt-2">{t.errors.quotaExceeded.suggestion}</p>
             </div>
           ) : error.type === 'overloaded' ? (
             <div>

@@ -64,9 +64,14 @@ export const de: Translations = {
 
   errors: {
     rateLimit: {
-      title: 'Kurze Pause',
-      message: 'Mike ist gerade sehr beliebt! Das System hat momentan seine Kapazitätsgrenze erreicht.',
-      suggestion: 'Bitte warten Sie einige Minuten und versuchen Sie es erneut. Der Administrator wurde benachrichtigt.',
+      title: 'Einen Moment',
+      message: 'Zu viele Anfragen gerade.',
+      suggestion: 'Bitte warten Sie einen Moment und versuchen Sie es erneut.',
+    },
+    quotaExceeded: {
+      title: 'Tokens Aufgebraucht',
+      message: 'Mike ist gerade nicht verfügbar. Das monatliche Nutzungslimit wurde erreicht.',
+      suggestion: 'Bitte kontaktieren Sie den Administrator. Das Limit wird am Anfang jedes Monats zurückgesetzt.',
     },
     overloaded: {
       title: 'Hohe Nachfrage',

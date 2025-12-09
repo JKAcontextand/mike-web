@@ -47,14 +47,24 @@ async function notifyRateLimit(errorDetails: string) {
 }
 
 // Error types for user-friendly messages
-type ErrorType = 'rate_limit' | 'overloaded' | 'auth' | 'unknown';
+type ErrorType = 'rate_limit' | 'quota_exceeded' | 'overloaded' | 'auth' | 'unknown';
 
 function classifyError(error: unknown): { type: ErrorType; details: string } {
   if (error instanceof Anthropic.RateLimitError) {
+    // Check if it's a quota/spend limit vs rate limit
+    const message = error.message?.toLowerCase() || '';
+    if (message.includes('quota') || message.includes('limit') || message.includes('exceeded') || message.includes('billing')) {
+      return { type: 'quota_exceeded', details: error.message };
+    }
     return { type: 'rate_limit', details: error.message };
   }
   if (error instanceof Anthropic.APIError) {
     if (error.status === 429) {
+      // Check the error message for quota-related keywords
+      const message = error.message?.toLowerCase() || '';
+      if (message.includes('quota') || message.includes('limit exceeded') || message.includes('billing') || message.includes('spend')) {
+        return { type: 'quota_exceeded', details: error.message };
+      }
       return { type: 'rate_limit', details: error.message };
     }
     if (error.status === 529 || error.message?.includes('overloaded')) {
