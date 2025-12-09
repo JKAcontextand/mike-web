@@ -73,6 +73,16 @@ export const de: Translations = {
       message: 'Mike ist gerade nicht verfügbar. Das monatliche Nutzungslimit wurde erreicht.',
       suggestion: 'Bitte kontaktieren Sie den Administrator. Das Limit wird am Anfang jedes Monats zurückgesetzt.',
     },
+    dailyLimitReached: {
+      title: 'Tageslimit Erreicht',
+      message: 'Mike hat das tägliche Nutzungslimit erreicht, um die Verfügbarkeit für alle zu gewährleisten.',
+      suggestion: 'Bitte versuchen Sie es morgen erneut. Das Limit wird um Mitternacht zurückgesetzt.',
+    },
+    monthlyLimitReached: {
+      title: 'Monatslimit Erreicht',
+      message: 'Mike hat das monatliche Nutzungslimit erreicht.',
+      suggestion: 'Bitte versuchen Sie es nächsten Monat erneut oder kontaktieren Sie den Administrator.',
+    },
     overloaded: {
       title: 'Hohe Nachfrage',
       message: 'Der KI-Dienst erlebt gerade eine hohe Nachfrage.',

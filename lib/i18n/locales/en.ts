@@ -73,6 +73,16 @@ export const en: Translations = {
       message: 'Mike is not available right now. The monthly usage limit has been reached.',
       suggestion: 'Please contact the administrator. The limit resets at the beginning of each month.',
     },
+    dailyLimitReached: {
+      title: 'Daily Limit Reached',
+      message: 'Mike has reached the daily usage limit to ensure availability for everyone.',
+      suggestion: 'Please try again tomorrow. The limit resets at midnight.',
+    },
+    monthlyLimitReached: {
+      title: 'Monthly Limit Reached',
+      message: 'Mike has reached the monthly usage limit.',
+      suggestion: 'Please try again next month or contact the administrator.',
+    },
     overloaded: {
       title: 'High Demand',
       message: 'The AI service is experiencing high demand right now.',

@@ -81,6 +81,16 @@ export interface Translations {
       message: string;
       suggestion: string;
     };
+    dailyLimitReached: {
+      title: string;
+      message: string;
+      suggestion: string;
+    };
+    monthlyLimitReached: {
+      title: string;
+      message: string;
+      suggestion: string;
+    };
     overloaded: {
       title: string;
       message: string;

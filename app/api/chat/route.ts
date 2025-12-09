@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import { getMikeSystemPrompt } from '@/lib/prompts';
 import { CoachingMode } from '@/lib/types';
 import { NextRequest } from 'next/server';
+import { checkUsageLimit, incrementUsage } from '@/lib/usageLimits';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -99,6 +100,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check usage limits
+    const usageStatus = await checkUsageLimit();
+    if (!usageStatus.allowed) {
+      const errorType = usageStatus.reason === 'daily_limit' ? 'daily_limit' : 'monthly_limit';
+      return new Response(
+        JSON.stringify({
+          error: `Usage limit reached: ${usageStatus.reason}`,
+          errorType,
+          usage: {
+            dailyUsed: usageStatus.dailyUsed,
+            dailyLimit: usageStatus.dailyLimit,
+            monthlyUsed: usageStatus.monthlyUsed,
+            monthlyLimit: usageStatus.monthlyLimit,
+          },
+        }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     // Call Claude API with streaming
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
@@ -129,6 +149,8 @@ export async function POST(request: NextRequest) {
             }
           }
           controller.enqueue(encoder.encode('data: [DONE]\n\n'));
+          // Increment usage counter after successful completion
+          await incrementUsage();
           controller.close();
         } catch (error) {
           console.error('Stream error:', error);

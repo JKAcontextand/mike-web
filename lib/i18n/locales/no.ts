@@ -73,6 +73,16 @@ export const no: Translations = {
       message: 'Mike er ikke tilgjengelig akkurat nå. Den månedlige bruksgrensen er nådd.',
       suggestion: 'Kontakt administratoren. Grensen tilbakestilles i begynnelsen av hver måned.',
     },
+    dailyLimitReached: {
+      title: 'Daglig Grense Nådd',
+      message: 'Mike har nådd den daglige bruksgrensen for å sikre tilgjengelighet for alle.',
+      suggestion: 'Prøv igjen i morgen. Grensen tilbakestilles ved midnatt.',
+    },
+    monthlyLimitReached: {
+      title: 'Månedlig Grense Nådd',
+      message: 'Mike har nådd den månedlige bruksgrensen.',
+      suggestion: 'Prøv igjen neste måned eller kontakt administratoren.',
+    },
     overloaded: {
       title: 'Høy Etterspørsel',
       message: 'AI-tjenesten opplever høy etterspørsel akkurat nå.',
