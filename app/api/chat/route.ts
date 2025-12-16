@@ -1,8 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { getMikeSystemPrompt } from '@/lib/prompts';
 import { CoachingMode } from '@/lib/types';
+import { Language } from '@/lib/i18n/types';
 import { NextRequest } from 'next/server';
 import { checkUsageLimit, incrementUsage } from '@/lib/usageLimits';
+
+interface ChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -123,8 +129,8 @@ export async function POST(request: NextRequest) {
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 2000,
-      system: getMikeSystemPrompt(mode as CoachingMode, language as any),
-      messages: messages.map((msg: any) => ({
+      system: getMikeSystemPrompt(mode as CoachingMode, language as Language),
+      messages: messages.map((msg: ChatMessage) => ({
         role: msg.role,
         content: msg.content,
       })),

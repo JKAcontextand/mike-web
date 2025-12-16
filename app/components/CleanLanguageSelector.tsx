@@ -1,16 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { cleanLanguageQuestions, CleanLanguageQuestion } from '@/lib/cleanLanguageQuestions';
-import { Message } from '@/lib/types';
 
 interface CleanLanguageSelectorProps {
   onQuestionSelect: (question: string) => void;
   disabled?: boolean;
-  messages?: Message[];
 }
 
-export default function CleanLanguageSelector({ onQuestionSelect, disabled = false, messages = [] }: CleanLanguageSelectorProps) {
+export default function CleanLanguageSelector({ onQuestionSelect, disabled = false }: CleanLanguageSelectorProps) {
   const [showWordInput, setShowWordInput] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState<string>('');
   const [inputWord, setInputWord] = useState<string>('');
@@ -157,7 +155,7 @@ export default function CleanLanguageSelector({ onQuestionSelect, disabled = fal
 
       {/* Footer */}
       <div className="text-[10px] text-gray-500 dark:text-gray-400 text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-        <p>Use X for client's words • © 2017-2024 Agendashift Ltd (CC BY-SA)</p>
+        <p>Use X for client&apos;s words - © 2017-2024 Agendashift Ltd (CC BY-SA)</p>
       </div>
 
       {/* Word Input Modal - Draggable */}
@@ -185,7 +183,7 @@ export default function CleanLanguageSelector({ onQuestionSelect, disabled = fal
               onMouseDown={handleMouseDown}
             >
               <h3 className="text-sm font-semibold text-white text-center">
-                Type word for "X"
+                Type word for &quot;X&quot;
               </h3>
             </div>
 

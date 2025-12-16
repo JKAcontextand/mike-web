@@ -126,7 +126,8 @@ export function learnFromReclassification(content: string, newClassification: Me
   }
 }
 
-export function getClassificationColor(classification?: MessageClassification): string {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export function getClassificationColor(_classification?: MessageClassification): string {
   // Keep all classifications neutral colored
   return 'bg-gray-400 dark:bg-gray-500';
 }

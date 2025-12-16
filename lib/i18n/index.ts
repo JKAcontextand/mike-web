@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Language, Translations, LanguageConfig } from './types';
 import { en } from './locales/en';
 import { da } from './locales/da';
@@ -57,17 +57,23 @@ export const translations: Record<Language, Translations> = {
   de,
 };
 
-export function useTranslations() {
-  const [language, setLanguage] = useState<Language>(DEFAULT_LANGUAGE);
-  const [mounted, setMounted] = useState(false);
+function getInitialLanguage(): Language {
+  if (typeof window === 'undefined') return DEFAULT_LANGUAGE;
+  const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
+  if (savedLanguage && translations[savedLanguage]) {
+    return savedLanguage;
+  }
+  return DEFAULT_LANGUAGE;
+}
 
-  useEffect(() => {
-    setMounted(true);
-    const savedLanguage = localStorage.getItem(STORAGE_KEY) as Language;
-    if (savedLanguage && translations[savedLanguage]) {
-      setLanguage(savedLanguage);
-    }
-  }, []);
+// Client-side hydration detection using useSyncExternalStore
+const emptySubscribe = () => () => {};
+const getClientSnapshot = () => true;
+const getServerSnapshot = () => false;
+
+export function useTranslations() {
+  const [language, setLanguage] = useState<Language>(getInitialLanguage);
+  const mounted = useSyncExternalStore(emptySubscribe, getClientSnapshot, getServerSnapshot);
 
   const changeLanguage = (newLanguage: Language) => {
     setLanguage(newLanguage);

@@ -5,10 +5,9 @@ import { Message, MessageClassification, ClassificationStats, CoachingMode } fro
 import { useTranslations } from '@/lib/i18n';
 import LanguageSelector from './LanguageSelector';
 import ClassificationBadge from './ClassificationBadge';
-import ClassificationStatsComponent from './ClassificationStats';
 import CleanLanguageSelector from './CleanLanguageSelector';
 import { classifyMessage, learnFromReclassification } from '@/lib/classificationUtils';
-import { detectCrisis, shouldShowCrisisModal, CrisisType } from '@/lib/crisisDetection';
+import { detectCrisis, shouldShowCrisisModal } from '@/lib/crisisDetection';
 import CrisisModal from './CrisisModal';
 
 export default function ChatInterface() {
@@ -24,6 +23,7 @@ export default function ChatInterface() {
   const [showCrisisModal, setShowCrisisModal] = useState(false);
   const [sessionEnded, setSessionEnded] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const recognitionRef = useRef<any>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -71,13 +71,15 @@ export default function ChatInterface() {
   // Initialize speech recognition
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
-      if (SpeechRecognition) {
-        const recognition = new SpeechRecognition();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const SpeechRecognitionAPI = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+      if (SpeechRecognitionAPI) {
+        const recognition = new SpeechRecognitionAPI();
         recognition.continuous = false;
         recognition.interimResults = false;
         recognition.lang = config.speechRecognitionCode;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         recognition.onresult = (event: any) => {
           const transcript = event.results[0][0].transcript;
           setInput((prev) => prev + (prev ? ' ' : '') + transcript);
@@ -185,7 +187,7 @@ export default function ChatInterface() {
                           )
                         );
                       }
-                    } catch (e) {
+                    } catch {
                       // Skip parse errors
                     }
                   }
@@ -207,11 +209,12 @@ export default function ChatInterface() {
 
             setIsLoading(false);
           })
-          .catch((err: any) => {
+          .catch((err: unknown) => {
             console.error('Opening question error:', err);
+            const errorObj = err as { message?: string; type?: string };
             setError({
-              message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
-              type: err?.type,
+              message: errorObj?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+              type: errorObj?.type,
             });
             setIsLoading(false);
           });
@@ -237,13 +240,15 @@ export default function ChatInterface() {
         setMessages([welcomeMessage, questionMessage]);
       }
     }
-  }, [messages.length, coachingMode, i18nMounted, t]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coachingMode, i18nMounted, t, language]);
 
   // Reset messages when language changes
   useEffect(() => {
     if (i18nMounted && messages.length > 0) {
       setMessages([]);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [language, i18nMounted]);
 
   // Compute classification stats
@@ -369,7 +374,7 @@ export default function ChatInterface() {
                     )
                   );
                 }
-              } catch (e) {
+              } catch {
                 // Skip parse errors
               }
             }
@@ -378,11 +383,12 @@ export default function ChatInterface() {
       }
 
       setIsLoading(false);
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Send message error:', err);
+      const errorObj = err as { message?: string; type?: string };
       setError({
-        message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
-        type: err?.type,
+        message: errorObj?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+        type: errorObj?.type,
       });
       setIsLoading(false);
     }
@@ -692,7 +698,6 @@ export default function ChatInterface() {
       {coachingMode === 'trainer' ? (
         <div className="border-t border-gray-200 dark:border-gray-700">
           <CleanLanguageSelector
-            messages={messages}
             onQuestionSelect={(question) => {
               setInput(question);
               // Auto-submit the selected question
@@ -771,7 +776,7 @@ export default function ChatInterface() {
                                 )
                               );
                             }
-                          } catch (e) {
+                          } catch {
                             // Skip parse errors
                           }
                         }
@@ -793,11 +798,12 @@ export default function ChatInterface() {
 
                   setIsLoading(false);
                 })
-                .catch((err: any) => {
+                .catch((err: unknown) => {
                   console.error('Send message error:', err);
+                  const errorObj = err as { message?: string; type?: string };
                   setError({
-                    message: err?.message || (err instanceof Error ? err.message : 'Failed to send message'),
-                    type: err?.type,
+                    message: errorObj?.message || (err instanceof Error ? err.message : 'Failed to send message'),
+                    type: errorObj?.type,
                   });
                   setIsLoading(false);
                 });

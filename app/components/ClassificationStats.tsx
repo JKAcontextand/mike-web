@@ -6,13 +6,11 @@ import { getClassificationLabel } from '@/lib/classificationUtils';
 interface ClassificationStatsProps {
   stats: ClassificationStats;
   language: string;
-  showReflections?: boolean;
 }
 
 export default function ClassificationStatsComponent({
   stats,
   language,
-  showReflections = false,
 }: ClassificationStatsProps) {
   return (
     <div className="bg-gray-50 dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 px-6 py-3">
